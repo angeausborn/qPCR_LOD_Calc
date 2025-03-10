@@ -612,8 +612,7 @@ DAT3$rep8.LOD[i] <- (qnorm(0.125)-coef(get(LOD.list[i+1]))[1])/coef(get(LOD.list
         }
         ## Look up highest modeled standard below the CV threshold:
         C <- max(newData$Standards[newData$Cq.CV<=B&newData$Standards<=A])
-        ## Look up the highest modeled standard above the CV threshold...
-        ##   and also below the highest standard below the CV threshold.
+        ## Look up the highest modeled standard above the CV threshold and also below the highest standard below the CV threshold.
         ##   This captures the farthest right crossing point on a downward slope.
         D <- max(newData$Standards[newData$Cq.CV>B&newData$Standards<C])
         ## LOQ is D + 1 to get back less than or equal to the CV threshold.
@@ -889,8 +888,7 @@ for(i in 1:length(Targets)) {
     geom_vline(xintercept=DAT3$LOD[DAT3$Assay==Targets[i]],
                color="red") +
     annotate("text",
-             y=max(DAT2$Cq.CV[DAT2$Target==Targets[i]],
-                   na.rm=TRUE)*0.99,
+             y=max(DAT2$Cq.CV[DAT2$Target==Targets[i]], na.rm=TRUE)*0.99,
              x=DAT3$LOD[i]*0.8,
              angle=90,
              label="LOD",
@@ -903,23 +901,17 @@ for(i in 1:length(Targets)) {
       PDAT$x[3:4] <- NA
       Decay.Plot <- Decay.Plot + 
         annotate("text",
-                 y=max(DAT2$Cq.CV[DAT2$Target==Targets[i]],
-                       na.rm=TRUE)*0.99,
+                 y=max(DAT2$Cq.CV[DAT2$Target==Targets[i]], na.rm=TRUE)*0.99,
                  x=median(DAT2$Standards[DAT2$Target==Targets[i]]),
-                 label="LOQ may be outside tested range.",
-                 hjust=0)
+                 label="LOQ may be outside tested range.", hjust=0)
     }
     Decay.Plot <- Decay.Plot + geom_polygon(data=PDAT,
-                                            aes(x=x,y=y,
-                                                alpha=0.5))
+                                            aes(x=x,y=y, alpha=0.5))
     
     if(as.character(get(LOQ.list[i+1])$call)[1]=="nls") {
       Decay.Plot <- Decay.Plot + 
         stat_smooth(method = "nls", 
-                    formula = y ~ SSasymp(x, 
-                                          Asym, 
-                                          R0, 
-                                          lrc), 
+                    formula = y ~ SSasymp(x, Asym, R0, lrc), 
                     se = FALSE) +
         ggtitle(paste0("Exponential Decay LOQ model for: ",
                        Targets[i]))
@@ -930,20 +922,13 @@ for(i in 1:length(Targets)) {
                as.character(get(LOQ.list[i+1])$call)[2])==TRUE) {
         B <- length(get(LOQ.list[i+1])$coefficients)-1
         Decay.Plot <- Decay.Plot +
-          stat_smooth(method = "lm", 
-                      formula = y ~ poly(x,B),
-                      se=FALSE) +
-          ggtitle(paste0(B,
-                         "-order polynomial LOQ model for: ",
-                         Targets[i]))
+          stat_smooth(method = "lm", formula = y ~ poly(x,B), se=FALSE) +
+          ggtitle(paste0(B, "-order polynomial LOQ model for: ", Targets[i]))
       }
       else {
         Decay.Plot <- Decay.Plot +
-          stat_smooth(method = "lm", 
-                      formula = y ~ x,
-                      se=FALSE) +
-          ggtitle(paste0("Linear LOQ model for: ",
-                         Targets[i]))
+          stat_smooth(method = "lm", formula = y ~ x, se=FALSE) +
+          ggtitle(paste0("Linear LOQ model for: ", Targets[i]))
       }
     } 
   }
@@ -959,4 +944,3 @@ for(i in 1:length(Targets)) {
   readline(prompt="Press [Enter] for next plot.")
   print("Calculating... Please wait.")
 }
-
