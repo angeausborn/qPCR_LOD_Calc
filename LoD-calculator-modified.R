@@ -1,4 +1,5 @@
-# This is a script to calculate Limit of Detection for eDNA assays
+# This is a script modified from Merkes et al. (2019) 
+# Available at https://github.com/cmerkes/qPCR_LOD_Calc DOI: https://doi.org/10.5066/P9GT00GB
 # It requires you to assemble your data for many replicates of a dilution
 # curve of low-copy standards into a single csv file with the following headings: Target, Cq, SQ (Note: headings are not case-sensitive, but must be spelled the same.)
 # SQ (Starting Quantity) should be the expected values for your standards.
@@ -139,8 +140,7 @@ for(i in 1:nrow(OUTS)) {
                               collapse=",")
   }
 }
-## If any outliers are detected, export the raw data as csv and make a note in
-##   the analysis log.
+## If any outliers are detected, export the raw data as csv and make a note in the analysis log.
 if(sum(!is.na(OUTS$Outliers))>0) {
   OUT.ROW <- paste(OUTS$Outliers[!is.na(OUTS$Outliers)],
                    collapse=",")
@@ -261,15 +261,11 @@ for(i in 1:length(Targets)) {
   if(length(which(DAT2$Rate<0.95&DAT2$Target==Targets[i]))>0) {
     B <- max(DAT2$Standards[DAT2$Rate<0.95&DAT2$Target==Targets[i]])
     if(B>A) {
-      ToWrite2 <- paste0("WARNING: For ",
-                         Targets[i],", ",B," copies/reaction standard detected at lower rate than ",A," copies/reaction standard.\nPlease retest.")
+      ToWrite2 <- paste0("WARNING: For ", Targets[i],", ",B," copies/reaction standard detected at lower rate than ",A," copies/reaction standard.\nPlease retest.")
     }
   }
   if(length(which(DAT2$Rate<0.95&DAT2$Target==Targets[i]))==0) {
-    ToWrite2 <- paste0("WARNING: LoD cannot be determined for ",
-                       Targets[i],
-                       ", because it is lower than the lowest standard you tested.\nReport as <",
-                       A," copies/reaction, or retest with lower concentrations.")
+    ToWrite2 <- paste0("WARNING: LoD cannot be determined for ", Targets[i], ", because it is lower than the lowest standard you tested.\nReport as <", A," copies/reaction, or retest with lower concentrations.")
   }
   write(paste0("\n\n",
                ToWrite,
@@ -286,8 +282,6 @@ for(i in 1:length(Targets)) {
 }
 
 ## Determine LoD and LoQ by modeling, and summarize each assay:
-## NOTE: LoD is now determined by dose-response modeling. Probit modeling code remains,
-##         but has been converted to comments.
 DAT$Detect <- as.numeric(!is.na(DAT$Cq))
 LOD.list <- ""
 LOD.list2 <- ""
@@ -305,21 +299,7 @@ DAT3 <- data.frame(Assay=Targets,
                    rep4.LOD=NA,
                    rep5.LOD=NA,
                    rep8.LOD=NA)
-LOD.FCTS <- list(LL.2(),
-                 LL.3(),
-                 LL.3u(),
-                 LL.4(),
-                 LL.5(),
-                 W1.2(),
-                 W1.3(),
-                 W1.4(),
-                 W2.2(),
-                 W2.3(),
-                 W2.4(),
-                 AR.2(),
-                 AR.3(),
-                 MM.2(),
-                 MM.3())
+LOD.FCTS <- list(LL.2(), LL.3(), LL.3u(), LL.4(), LL.5(), W1.2(), W1.3(), W1.4(), W2.2(), W2.3(), W2.4(), AR.2(), AR.3(), MM.2(), MM.3())
 for(i in 1:length(Targets)) {
   ## Check input suitability for probit or dose-response modeling:
   if(sum(DAT2$Rate[DAT2$Target==Targets[i]]!=1&DAT2$Rate[DAT2$Target==Targets[i]]!=0)==0) {
@@ -352,13 +332,7 @@ LOD.list <- c(LOD.list,
   ## Define LOQ model using lowest residual standard error selection:
   if(LOQ.FCT=="Best") {
     ## Remove previous marker LOQ models from environment if they exist:
-    suppressWarnings(rm(LOQ1,
-                        LOQ2,
-                        LOQ3,
-                        LOQ4,
-                        LOQ5,
-                        LOQ6,
-                        LOQ7))
+    suppressWarnings(rm(LOQ1, LOQ2, LOQ3, LOQ4, LOQ5, LOQ6, LOQ7))
     tryCatch({ #skip if model cannot be determined.
       LOQ1 <- nls(Cq.CV~SSasymp(log10(Standards),
                                 Asym,
